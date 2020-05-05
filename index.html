@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script type="text/javascript">
+    var ws;
+    var username = getUrlParameter('username');
+    var url = "ws://localhost:8080/websocket/chatSocket?username="
+            + username;
+    window.onload = connect;
+    function connect() {
+        if ('WebSocket' in window) {
+            ws = new WebSocket(url);
+        } else if ('MozWebSocket' in window) {
+            ws = new MozWebSocket(url);
+        } else {
+            alert('该浏览器不支持websocket');
+            return;
+        }
+
+        ws.onmessage = function(event) {
+            eval("var result=" + event.data);
+            //欢迎语言
+            if (result.alert != undefined) {
+                document.getElementById("content").innerHTML += result.alert
+                        + "<br/>";
+            }
+            //列表
+            if (result.names != undefined) {
+                document.getElementById("userList").innerHTML = "";
+                var arr = result.names;
+                for (var i = 0; i < arr.length; i++) {
+                    document.getElementById("userList").innerHTML += arr[i]
+                            + "<br/>";
+                }
+            }
+            //聊天内容
+            if (result.from != undefined) {
+                document.getElementById("content").innerHTML += result.from
+                        + " " + result.date + " 说：<br/>" + result.sendMsg
+                        + "<br/>";
+            }
+        };
+    }
+
+    function wsSend() {
+
+        var msg = document.getElementById("msg");
+        ws.send(msg.value);
+        msg.value = "";
+    }
+
+    //截取URL 中的传过来的值
+    function getUrlParameter(name) {
+        name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+        var regexS = "[\\?&]" + name + "=([^&#]*)";
+        var regex = new RegExp(regexS);
+        var results = regex.exec(window.parent.location.href);
+        if (results == null)
+            return "";
+        else {
+
+            return results[1];
+        }
+    }
+</script>
+</head>
+<body>
+    <div id="content"
+        style="border: 1px solid black; width: 400px; height: 300px; float: left;"></div>
+    <div id="userList"
+        style="border: 1px solid black; width: 100px; height: 300px; float: left;"></div>
+
+    <div style="clear: both;">
+        <input id="msg" />
+        <button onclick="wsSend()">send</button>
+    </div>
+</body>
+</html>
